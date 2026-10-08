@@ -1,0 +1,33 @@
+name: Afrosiyob seat watcher
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"   # keeps a job queued so a new one starts when the running one ends
+
+# Only one watcher runs at a time; the next scheduled run waits in the queue.
+concurrency:
+  group: watcher
+  cancel-in-progress: false
+
+permissions:
+  actions: write   # lets the job disable this workflow when all trains have left
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    steps:
+      - uses: actions/checkout@v4
+      - name: Watch for seats (every 30 s, ~5h50m per job)
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          MAX_MINUTES: "350"
+          INTERVAL: "30"
+        run: python3 -u watch.py
+      - name: Disable workflow when all trains have departed
+        if: hashFiles('DONE') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow disable watch.yml --repo ${{ github.repository }}
