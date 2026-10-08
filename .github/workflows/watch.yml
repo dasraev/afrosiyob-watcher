@@ -2,6 +2,10 @@ name: Afrosiyob seat watcher
 
 on:
   workflow_dispatch:
+    inputs:
+      minutes:
+        description: "How long this run watches (minutes, max 350)"
+        default: "350"
   schedule:
     - cron: "*/15 * * * *"   # keeps a job queued so a new one starts when the running one ends
 
@@ -23,7 +27,8 @@ jobs:
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          MAX_MINUTES: "350"
+          MAX_MINUTES: ${{ inputs.minutes || '350' }}
+          STARTUP_MSG: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           INTERVAL: "30"
         run: python3 -u watch.py
       - name: Disable workflow when all trains have departed

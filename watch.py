@@ -83,6 +83,9 @@ while True:
         print(f"[{now}] {len(cur)} upcoming Afrosiyob, with seats: {list(avail) or 'none'}", flush=True)
         if first:
             print("trains:", list(cur), flush=True)
+            if os.environ.get("STARTUP_MSG"):
+                send("✅ Watcher started on GitHub. Watching " + str(len(cur)) + " Afrosiyob trains:\n"
+                     + "\n".join(cur) + "\nSeats now: " + (", ".join(avail) or "none"))
         new = [v[1] for k, v in avail.items() if prev.get(k, 0) == 0]
         if new:
             send("SEATS AVAILABLE — Navoiy → Toshkent\n\n" + "\n\n".join(new) + f"\n\nBuy: {BASE}/uz/pages/trains-page")
@@ -100,8 +103,8 @@ while True:
         errors += 1
         jar.clear()
         print(f"[{now}] error: {e}", flush=True)
-        if errors == 10:
-            send(f"⚠️ Train watcher: 10 checks in a row failed ({e}).")
+        if errors in (3, 30):
+            send(f"⚠️ Train watcher: checks keep failing ({e}).")
     if "--once" in sys.argv or (MAX_MINUTES and time.time() - start > MAX_MINUTES * 60):
         break
     time.sleep(INTERVAL)
